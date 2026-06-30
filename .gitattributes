@@ -1,0 +1,11 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# C# scripts use LF
+*.cs text eol=lf
+
+# Unity assets are binary
+*.asset binary
+*.meta binary
+*.unity binary
+*.prefab binary
