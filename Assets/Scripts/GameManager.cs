@@ -115,44 +115,38 @@ public class GameManager : MonoBehaviour
     }
 
     IEnumerator EnemyTurn()
+{
+    yield return new WaitForSeconds(1.0f); // let player read their own action first
+
+    messageText.text = "👹 Enemy is preparing to attack...";
+    yield return new WaitForSeconds(1.0f);
+
+    int damage = enemyAttack - playerShield;
+    if (damage < 0) damage = 0;
+    playerHP -= damage;
+    if (playerHP < 0) playerHP = 0;
+    playerShield = 0;
+
+    messageText.text = damage > 0 ? $"💢 Enemy attacks for {damage} damage!" : "🛡️ Shield blocked the attack!";
+    UpdateUI();
+
+    yield return new WaitForSeconds(1.2f);
+
+    if (playerHP <= 0)
     {
-        yield return new WaitForSeconds(1.0f);
-
-        // Calculate damage with shield
-        int damage = enemyAttack - playerShield;
-        if (damage < 0) damage = 0;
-        
-        playerHP -= damage;
-        if (playerHP < 0) playerHP = 0;
-        
-        // Reset shield after use
-        playerShield = 0;
-
-        // Show enemy attack message
-        if (damage > 0)
-            messageText.text = $"💢 Enemy attacks for {damage} damage!";
-        else
-            messageText.text = "🛡️ Your shield blocked all damage!";
-
+        playerHP = 0;
         UpdateUI();
-
-        // Check if player died
-        if (playerHP <= 0)
-        {
-            playerHP = 0;
-            UpdateUI();
-            messageText.text = "💀 GAME OVER! Press Restart to try again.";
-            EndGame();
-            yield break;
-        }
-
-        // Back to player's turn
-        isPlayerTurn = true;
-        messageText.text = "⚔️ Your turn! Choose an action.";
-        attackBtn.interactable = true;
-        blockBtn.interactable = true;
-        healBtn.interactable = true;
+        messageText.text = "💀 GAME OVER! Press Restart to try again.";
+        EndGame();
+        yield break;
     }
+
+    isPlayerTurn = true;   // <- this line was missing before, causing the stuck cards
+    messageText.text = "⚔️ Your turn! Choose an action.";
+    attackBtn.interactable = true;
+    blockBtn.interactable = true;
+    healBtn.interactable = true;
+}
 
     void UpdateUI()
     {
