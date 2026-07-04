@@ -15,6 +15,13 @@ public class GameManager : MonoBehaviour
     public Button healBtn;
     public Button restartBtn;
 
+    public Image playerPanelImage;
+    public Image enemyPanelImage;
+
+    public GameObject floatingTextPrefab;
+    public Transform playerTextSpawn; // e.g. PlayerHealthBar position
+    public Transform enemyTextSpawn;  // e.g. EnemyHealthBar position
+
     // Game state
     private int playerMaxHP = 100;
     private int playerHP;
@@ -84,6 +91,8 @@ public class GameManager : MonoBehaviour
             enemyHP -= attackDamage;
             if (enemyHP < 0) enemyHP = 0;
             messageText.text = $"⚔️ You dealt {attackDamage} damage!";
+            SpawnFloatingText(enemyTextSpawn, $"-{attackDamage}", Color.red);
+            StartCoroutine(FlashPanel(enemyPanelImage, Color.white));
         }
         else if (action == "block")
         {
@@ -95,6 +104,8 @@ public class GameManager : MonoBehaviour
             playerHP += healAmount;
             if (playerHP > playerMaxHP) playerHP = playerMaxHP;
             messageText.text = $"❤️ You healed {healAmount} HP!";
+            SpawnFloatingText(playerTextSpawn, $"+{healAmount}", Color.green);
+            StartCoroutine(FlashPanel(playerPanelImage, Color.green));
         }
 
         UpdateUI();
@@ -122,6 +133,10 @@ public class GameManager : MonoBehaviour
     yield return new WaitForSeconds(1.0f);
 
     int damage = enemyAttack - playerShield;
+    
+    SpawnFloatingText(playerTextSpawn, damage > 0 ? $"-{damage}" : "Blocked!", damage > 0 ? Color.red : Color.cyan);
+    StartCoroutine(FlashPanel(playerPanelImage, Color.white));
+
     if (damage < 0) damage = 0;
     playerHP -= damage;
     if (playerHP < 0) playerHP = 0;
@@ -149,16 +164,30 @@ public class GameManager : MonoBehaviour
 }
 
     void UpdateUI()
-    {
-        // Update health bars
-        playerHealthBar.value = playerHP;
-        playerHealthBar.maxValue = playerMaxHP;
-        playerHealthText.text = $"HP: {playerHP} / {playerMaxHP}";
+{
+    playerHealthBar.maxValue = playerMaxHP;
+    enemyHealthBar.maxValue = enemyMaxHP;
+    playerHealthText.text = $"HP: {playerHP} / {playerMaxHP}";
+    enemyHealthText.text = $"HP: {enemyHP} / {enemyMaxHP}";
 
-        enemyHealthBar.value = enemyHP;
-        enemyHealthBar.maxValue = enemyMaxHP;
-        enemyHealthText.text = $"HP: {enemyHP} / {enemyMaxHP}";
+    StartCoroutine(SmoothBar(playerHealthBar, playerHP));
+    StartCoroutine(SmoothBar(enemyHealthBar, enemyHP));
+}
+
+IEnumerator SmoothBar(Slider bar, float target)
+{
+    float start = bar.value;
+    float elapsed = 0f;
+    float duration = 0.4f;
+
+    while (elapsed < duration)
+    {
+        elapsed += Time.deltaTime;
+        bar.value = Mathf.Lerp(start, target, elapsed / duration);
+        yield return null;
     }
+    bar.value = target;
+}
 
     void EndGame()
     {
@@ -175,4 +204,21 @@ public class GameManager : MonoBehaviour
     {
         StartGame();
     }
+
+ // Add a red flash to whichever panel got hit, and a green flash on heal
+    IEnumerator FlashPanel(Image panelImage, Color flashColor)
+{
+    Color original = panelImage.color;
+    panelImage.color = flashColor;
+    yield return new WaitForSeconds(0.15f);
+    panelImage.color = original;
 }
+
+void SpawnFloatingText(Transform spawnPoint, string message, Color color)
+{
+    GameObject go = Instantiate(floatingTextPrefab, spawnPoint.position, Quaternion.identity, spawnPoint.root);
+    go.GetComponent<FloatingText>().Setup(message, color);
+}
+
+}
+

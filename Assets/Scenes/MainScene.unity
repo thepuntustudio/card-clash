@@ -370,11 +370,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4636443702805763545, guid: 68cb1f0f12c254e3ca2b8064ee2335a1, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 259.03772
+      value: 262
       objectReference: {fileID: 0}
     - target: {fileID: 4636443702805763545, guid: 68cb1f0f12c254e3ca2b8064ee2335a1, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -26.526611
+      value: -52.52661
       objectReference: {fileID: 0}
     - target: {fileID: 4636443702805763545, guid: 68cb1f0f12c254e3ca2b8064ee2335a1, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1445,7 +1445,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2029419711}
   - {fileID: 1123920672}
@@ -1839,7 +1839,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 207, y: -30}
+  m_AnchoredPosition: {x: 209.96228, y: -56}
   m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1360666121
@@ -2335,6 +2335,11 @@ MonoBehaviour:
   blockBtn: {fileID: 402966259}
   healBtn: {fileID: 1388207637}
   restartBtn: {fileID: 364752947}
+  playerPanelImage: {fileID: 2029419712}
+  enemyPanelImage: {fileID: 1123920673}
+  floatingTextPrefab: {fileID: 5483028622356060980, guid: e37301733ae7d46cab519ccacb25a454, type: 3}
+  playerTextSpawn: {fileID: 1626636253}
+  enemyTextSpawn: {fileID: 374019970}
 --- !u!4 &1763609841
 Transform:
   m_ObjectHideFlags: 0
@@ -2462,7 +2467,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 204, y: -30}
+  m_AnchoredPosition: {x: 206.96228, y: -56}
   m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1993635970
@@ -2719,11 +2724,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4636443702805763545, guid: 68cb1f0f12c254e3ca2b8064ee2335a1, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 259.0377
+      value: 262
       objectReference: {fileID: 0}
     - target: {fileID: 4636443702805763545, guid: 68cb1f0f12c254e3ca2b8064ee2335a1, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -25
+      value: -51
       objectReference: {fileID: 0}
     - target: {fileID: 4636443702805763545, guid: 68cb1f0f12c254e3ca2b8064ee2335a1, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
