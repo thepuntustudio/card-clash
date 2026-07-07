@@ -1,9 +1,24 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
+using System;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
+    public CardData attackCard;
+    public CardData powerStrikeCard;
+    public CardData blockCard;
+    public CardData healCard;
+    [Range(0f, 1f)] public float powerStrikeChance = 0.15f;
+    public TMP_Text attackButtonLabel;
+
+    public List<EnemyData> enemies;
+    private int currentEnemyIndex = 0;
+    private CardData currentAttackCard;
+    public Text enemyNameText; // drag EnemyName object here in Inspector
+
     // References
     public Slider playerHealthBar;
     public Slider enemyHealthBar;
@@ -22,6 +37,7 @@ public class GameManager : MonoBehaviour
     public Transform playerTextSpawn; // e.g. PlayerHealthBar position
     public Transform enemyTextSpawn;  // e.g. EnemyHealthBar position
 
+
     // Game state
     private int playerMaxHP = 100;
     private int playerHP;
@@ -29,36 +45,42 @@ public class GameManager : MonoBehaviour
     private int enemyHP;
     private int enemyAttack = 12;
     private int playerShield = 0;
-    private int healAmount = 15;
-    private int attackDamage = 10;
     private bool isPlayerTurn = true;
     private bool gameOver = false;
+
+    private string currentEnemyName;
 
     void Start()
     {
         StartGame();
+
     }
 
     void StartGame()
     {
-        // Reset everything
         playerHP = playerMaxHP;
-        enemyHP = enemyMaxHP;
+        currentEnemyIndex = 0;
+        LoadEnemy(enemies[currentEnemyIndex]);   // pulls real stats + sets enemyNameText
         playerShield = 0;
         gameOver = false;
         isPlayerTurn = true;
 
-        // Update UI
+        RollAttackCard();
+
         UpdateUI();
         messageText.text = "⚔️ Choose your action!";
-        
-        // Show/hide buttons
+
         attackBtn.interactable = true;
         blockBtn.interactable = true;
         healBtn.interactable = true;
         restartBtn.gameObject.SetActive(false);
     }
 
+    void RollAttackCard()
+    {
+        currentAttackCard = (UnityEngine.Random.value < powerStrikeChance) ? powerStrikeCard : attackCard;
+        attackButtonLabel.text = currentAttackCard.cardName;
+    }
     // Called when player clicks a button
     public void PlayerAttack()
     {
@@ -80,31 +102,30 @@ public class GameManager : MonoBehaviour
 
     void PerformPlayerAction(string action)
     {
-        // Disable buttons during the action
         attackBtn.interactable = false;
         blockBtn.interactable = false;
         healBtn.interactable = false;
 
-        // Player's turn
         if (action == "attack")
         {
-            enemyHP -= attackDamage;
+            int dmg = currentAttackCard.value;
+            enemyHP -= dmg;
             if (enemyHP < 0) enemyHP = 0;
-            messageText.text = $"⚔️ You dealt {attackDamage} damage!";
-            SpawnFloatingText(enemyTextSpawn, $"-{attackDamage}", Color.red);
+            messageText.text = $"⚔️ {currentAttackCard.cardName} dealt {dmg} damage!";
+            SpawnFloatingText(enemyTextSpawn, $"-{dmg}", Color.red);
             StartCoroutine(FlashPanel(enemyPanelImage, Color.white));
         }
         else if (action == "block")
         {
-            playerShield = 8;
+            playerShield = blockCard.value;
             messageText.text = "🛡️ You raise your shield!";
         }
         else if (action == "heal")
         {
-            playerHP += healAmount;
+            playerHP += healCard.value;
             if (playerHP > playerMaxHP) playerHP = playerMaxHP;
-            messageText.text = $"❤️ You healed {healAmount} HP!";
-            SpawnFloatingText(playerTextSpawn, $"+{healAmount}", Color.green);
+            messageText.text = $"❤️ You healed {healCard.value} HP!";
+            SpawnFloatingText(playerTextSpawn, $"+{healCard.value}", Color.green);
             StartCoroutine(FlashPanel(playerPanelImage, Color.green));
         }
 
@@ -115,8 +136,7 @@ public class GameManager : MonoBehaviour
         {
             enemyHP = 0;
             UpdateUI();
-            messageText.text = "🎉 YOU WIN! Press Restart to play again.";
-            EndGame();
+            StartCoroutine(NextEnemyRoutine());   
             return;
         }
 
@@ -124,70 +144,100 @@ public class GameManager : MonoBehaviour
         isPlayerTurn = false;
         StartCoroutine(EnemyTurn());
     }
+        void LoadEnemy(EnemyData data)
+    {
+        enemyMaxHP = data.maxHP;
+        enemyHP = data.maxHP;
+        enemyAttack = data.attackDamage;
+        currentEnemyName = data.enemyName;
+        enemyNameText.text = data.enemyName;
+    }
+
+    IEnumerator NextEnemyRoutine()
+    {
+        messageText.text = $"🎉 {currentEnemyName} defeated!";
+        yield return new WaitForSeconds(1.5f);
+
+        currentEnemyIndex++;
+        if (currentEnemyIndex >= enemies.Count)
+            currentEnemyIndex = enemies.Count - 1; // stay on strongest enemy, or loop back to 0 if you want endless scaling
+
+        LoadEnemy(enemies[currentEnemyIndex]);
+        // playerHP is untouched on purpose — you keep current HP
+        UpdateUI();
+
+        RollAttackCard();
+        messageText.text = $"A {enemies[currentEnemyIndex].enemyName} appears!";
+        attackBtn.interactable = true;
+        blockBtn.interactable = true;
+        healBtn.interactable = true;
+        isPlayerTurn = true;
+    }
 
     IEnumerator EnemyTurn()
-{
-    yield return new WaitForSeconds(1.0f); // let player read their own action first
-
-    messageText.text = "👹 Enemy is preparing to attack...";
-    yield return new WaitForSeconds(1.0f);
-
-    int damage = enemyAttack - playerShield;
-    
-    SpawnFloatingText(playerTextSpawn, damage > 0 ? $"-{damage}" : "Blocked!", damage > 0 ? Color.red : Color.cyan);
-    StartCoroutine(FlashPanel(playerPanelImage, Color.white));
-
-    if (damage < 0) damage = 0;
-    playerHP -= damage;
-    if (playerHP < 0) playerHP = 0;
-    playerShield = 0;
-
-    messageText.text = damage > 0 ? $"💢 Enemy attacks for {damage} damage!" : "🛡️ Shield blocked the attack!";
-    UpdateUI();
-
-    yield return new WaitForSeconds(1.2f);
-
-    if (playerHP <= 0)
     {
-        playerHP = 0;
-        UpdateUI();
-        messageText.text = "💀 GAME OVER! Press Restart to try again.";
-        EndGame();
-        yield break;
-    }
+        yield return new WaitForSeconds(1.0f); // let player read their own action first
 
-    isPlayerTurn = true;   // <- this line was missing before, causing the stuck cards
-    messageText.text = "⚔️ Your turn! Choose an action.";
-    attackBtn.interactable = true;
-    blockBtn.interactable = true;
-    healBtn.interactable = true;
-}
+        messageText.text = "👹 Enemy is preparing to attack...";
+        yield return new WaitForSeconds(1.0f);
+
+        int damage = enemyAttack - playerShield;
+        
+        SpawnFloatingText(playerTextSpawn, damage > 0 ? $"-{damage}" : "Blocked!", damage > 0 ? Color.red : Color.cyan);
+        StartCoroutine(FlashPanel(playerPanelImage, Color.white));
+
+        if (damage < 0) damage = 0;
+        playerHP -= damage;
+        if (playerHP < 0) playerHP = 0;
+        playerShield = 0;
+
+        messageText.text = damage > 0 ? $"💢 Enemy attacks for {damage} damage!" : "🛡️ Shield blocked the attack!";
+        UpdateUI();
+
+        yield return new WaitForSeconds(1.2f);
+
+        if (playerHP <= 0)
+        {
+            playerHP = 0;
+            UpdateUI();
+            messageText.text = "💀 GAME OVER! Press Restart to try again.";
+            EndGame();
+            yield break;
+        }
+
+        isPlayerTurn = true;   
+        RollAttackCard();
+        messageText.text = "⚔️ Your turn! Choose an action.";
+        attackBtn.interactable = true;
+        blockBtn.interactable = true;
+        healBtn.interactable = true;
+    }
 
     void UpdateUI()
-{
-    playerHealthBar.maxValue = playerMaxHP;
-    enemyHealthBar.maxValue = enemyMaxHP;
-    playerHealthText.text = $"HP: {playerHP} / {playerMaxHP}";
-    enemyHealthText.text = $"HP: {enemyHP} / {enemyMaxHP}";
-
-    StartCoroutine(SmoothBar(playerHealthBar, playerHP));
-    StartCoroutine(SmoothBar(enemyHealthBar, enemyHP));
-}
-
-IEnumerator SmoothBar(Slider bar, float target)
-{
-    float start = bar.value;
-    float elapsed = 0f;
-    float duration = 0.4f;
-
-    while (elapsed < duration)
     {
-        elapsed += Time.deltaTime;
-        bar.value = Mathf.Lerp(start, target, elapsed / duration);
-        yield return null;
+        playerHealthBar.maxValue = playerMaxHP;
+        enemyHealthBar.maxValue = enemyMaxHP;
+        playerHealthText.text = $"HP: {playerHP} / {playerMaxHP}";
+        enemyHealthText.text = $"HP: {enemyHP} / {enemyMaxHP}";
+
+        StartCoroutine(SmoothBar(playerHealthBar, playerHP));
+        StartCoroutine(SmoothBar(enemyHealthBar, enemyHP));
     }
-    bar.value = target;
-}
+
+    IEnumerator SmoothBar(Slider bar, float target)
+    {
+        float start = bar.value;
+        float elapsed = 0f;
+        float duration = 0.4f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            bar.value = Mathf.Lerp(start, target, elapsed / duration);
+            yield return null;
+        }
+        bar.value = target;
+    }
 
     void EndGame()
     {
@@ -207,18 +257,18 @@ IEnumerator SmoothBar(Slider bar, float target)
 
  // Add a red flash to whichever panel got hit, and a green flash on heal
     IEnumerator FlashPanel(Image panelImage, Color flashColor)
-{
-    Color original = panelImage.color;
-    panelImage.color = flashColor;
-    yield return new WaitForSeconds(0.15f);
-    panelImage.color = original;
-}
+    {
+        Color original = panelImage.color;
+        panelImage.color = flashColor;
+        yield return new WaitForSeconds(0.15f);
+        panelImage.color = original;
+    }
 
-void SpawnFloatingText(Transform spawnPoint, string message, Color color)
-{
-    GameObject go = Instantiate(floatingTextPrefab, spawnPoint.position, Quaternion.identity, spawnPoint.root);
-    go.GetComponent<FloatingText>().Setup(message, color);
-}
+    void SpawnFloatingText(Transform spawnPoint, string message, Color color)
+    {
+        GameObject go = Instantiate(floatingTextPrefab, spawnPoint.position, Quaternion.identity, spawnPoint.root);
+        go.GetComponent<FloatingText>().Setup(message, color);
+    }
 
 }
 

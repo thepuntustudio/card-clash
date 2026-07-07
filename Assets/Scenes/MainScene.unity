@@ -735,7 +735,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: e3265ab4bf004d28a9537516768c1c75, type: 3}
     m_FontSize: 50
     m_FontStyle: 0
     m_BestFit: 1
@@ -1292,7 +1292,7 @@ GameObject:
   - component: {fileID: 711380121}
   - component: {fileID: 711380120}
   m_Layer: 5
-  m_Name: Text
+  m_Name: AttackText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2326,6 +2326,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 213989d14e3c34ef7b79103ee23e2e21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  attackCard: {fileID: 11400000, guid: 220750575ca734d7f997867f39114968, type: 2}
+  powerStrikeCard: {fileID: 11400000, guid: 80a461647489842afaf00c663efa9f62, type: 2}
+  blockCard: {fileID: 11400000, guid: 45b9751b7b59f48da97ede95ff210273, type: 2}
+  healCard: {fileID: 11400000, guid: 475dbc256bb664064afa4083536a5ffd, type: 2}
+  powerStrikeChance: 0.15
+  attackButtonLabel: {fileID: 711380120}
+  enemies:
+  - {fileID: 11400000, guid: 079d0562186b14881b2fd426d439be14, type: 2}
+  - {fileID: 11400000, guid: 4d13bbe1bafbd46cba884842e441a739, type: 2}
+  - {fileID: 11400000, guid: 4a310d21a52914b03b7d88b521b56034, type: 2}
+  enemyNameText: {fileID: 374019971}
   playerHealthBar: {fileID: 1061583642}
   enemyHealthBar: {fileID: 1745511847}
   playerHealthText: {fileID: 1360666122}
