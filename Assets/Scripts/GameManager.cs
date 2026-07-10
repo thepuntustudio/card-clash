@@ -19,6 +19,12 @@ public class GameManager : MonoBehaviour
     private CardData currentAttackCard;
     public Text enemyNameText; // drag EnemyName object here in Inspector
 
+    public GameObject victoryPanel;
+    public TMP_Text victoryText;
+    public TMP_Text scoreText; // optional, can leave unassigned if skipping
+    public Button continueButton;
+    public Button endButton;
+
     // References
     public Slider playerHealthBar;
     public Slider enemyHealthBar;
@@ -50,6 +56,10 @@ public class GameManager : MonoBehaviour
 
     private string currentEnemyName;
 
+    private int winCount = 0;
+    private int loopCount = 0;
+    private bool endlessMode = false;
+
     void Start()
     {
         StartGame();
@@ -60,13 +70,15 @@ public class GameManager : MonoBehaviour
     {
         playerHP = playerMaxHP;
         currentEnemyIndex = 0;
-        LoadEnemy(enemies[currentEnemyIndex]);   // pulls real stats + sets enemyNameText
+        winCount = 0;
+        loopCount = 0;
+        endlessMode = false;
+        LoadEnemy(enemies[currentEnemyIndex]);
         playerShield = 0;
         gameOver = false;
         isPlayerTurn = true;
 
         RollAttackCard();
-
         UpdateUI();
         messageText.text = "⚔️ Choose your action!";
 
@@ -74,6 +86,7 @@ public class GameManager : MonoBehaviour
         blockBtn.interactable = true;
         healBtn.interactable = true;
         restartBtn.gameObject.SetActive(false);
+        victoryPanel.SetActive(false);
     }
 
     void RollAttackCard()
@@ -156,23 +169,75 @@ public class GameManager : MonoBehaviour
     IEnumerator NextEnemyRoutine()
     {
         messageText.text = $"🎉 {currentEnemyName} defeated!";
+        winCount++;
         yield return new WaitForSeconds(1.5f);
 
         currentEnemyIndex++;
+
         if (currentEnemyIndex >= enemies.Count)
-            currentEnemyIndex = enemies.Count - 1; // stay on strongest enemy, or loop back to 0 if you want endless scaling
+        {
+            if (!endlessMode)
+            {
+                ShowVictoryPanel();
+                yield break;
+            }
+            currentEnemyIndex = 0;
+            loopCount++;
+        }
 
         LoadEnemy(enemies[currentEnemyIndex]);
-        // playerHP is untouched on purpose — you keep current HP
-        UpdateUI();
+        if (endlessMode)
+        {
+            enemyMaxHP += loopCount * 5;
+            enemyHP = enemyMaxHP;
+            enemyAttack += loopCount * 1;
+        }
 
+        UpdateUI();
         RollAttackCard();
-        messageText.text = $"A {enemies[currentEnemyIndex].enemyName} appears!";
+        messageText.text = $"A {currentEnemyName} appears!";
+        if (scoreText != null) scoreText.text = $"Wins: {winCount}";
         attackBtn.interactable = true;
         blockBtn.interactable = true;
         healBtn.interactable = true;
         isPlayerTurn = true;
     }
+
+    void ShowVictoryPanel()
+    {
+        isPlayerTurn = false;
+        victoryText.text = "You have saved the kingdom from the beast horde!\n\nRumors speak of darker foes beyond the border...";
+        victoryPanel.SetActive(true);
+    }
+
+// Hook to ContinueButton's OnClick in Inspector
+public void OnContinueForHighScore()
+{
+    endlessMode = true;
+    victoryPanel.SetActive(false);
+    loopCount++;
+    currentEnemyIndex = 0;
+    LoadEnemy(enemies[currentEnemyIndex]);
+    enemyMaxHP += loopCount * 5;
+    enemyHP = enemyMaxHP;
+    enemyAttack += loopCount * 1;
+    UpdateUI();
+    RollAttackCard();
+    messageText.text = $"A stronger {currentEnemyName} appears!";
+    if (scoreText != null) scoreText.text = $"Wins: {winCount}";
+    attackBtn.interactable = true;
+    blockBtn.interactable = true;
+    healBtn.interactable = true;
+    isPlayerTurn = true;
+}
+
+// Hook to EndButton's OnClick in Inspector
+public void OnEndGameChoice()
+{
+    victoryPanel.SetActive(false);
+    messageText.text = $"🏆 Thanks for playing! Final wins: {winCount}. Press Restart to play again.";
+    EndGame();
+}
 
     IEnumerator EnemyTurn()
     {
