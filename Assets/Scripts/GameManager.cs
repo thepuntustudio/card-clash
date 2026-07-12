@@ -4,15 +4,22 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+
+    
     public CardData attackCard;
     public CardData powerStrikeCard;
     public CardData blockCard;
     public CardData healCard;
     [Range(0f, 1f)] public float powerStrikeChance = 0.15f;
     public TMP_Text attackButtonLabel;
+
+    public TMP_Text restartButtonLabel; 
+    public Button mainMenuBtn;
+    public Button surrenderBtn;
 
     public List<EnemyData> enemies;
     private int currentEnemyIndex = 0;
@@ -86,6 +93,8 @@ public class GameManager : MonoBehaviour
         blockBtn.interactable = true;
         healBtn.interactable = true;
         restartBtn.gameObject.SetActive(false);
+        mainMenuBtn.gameObject.SetActive(false);
+        surrenderBtn.gameObject.SetActive(true);
         victoryPanel.SetActive(false);
     }
 
@@ -236,7 +245,7 @@ public void OnEndGameChoice()
 {
     victoryPanel.SetActive(false);
     messageText.text = $"🏆 Thanks for playing! Final wins: {winCount}. Press Restart to play again.";
-    EndGame();
+    EndGame(true);
 }
 
     IEnumerator EnemyTurn()
@@ -266,7 +275,7 @@ public void OnEndGameChoice()
             playerHP = 0;
             UpdateUI();
             messageText.text = "💀 GAME OVER! Press Restart to try again.";
-            EndGame();
+            EndGame(false);
             yield break;
         }
 
@@ -304,14 +313,20 @@ public void OnEndGameChoice()
         bar.value = target;
     }
 
-    void EndGame()
+    void EndGame(bool won)
     {
         gameOver = true;
         isPlayerTurn = false;
+        StopAllCoroutines(); // stop any pending enemy-turn/tween so nothing fires after the game ends
+
         attackBtn.interactable = false;
         blockBtn.interactable = false;
         healBtn.interactable = false;
+        surrenderBtn.gameObject.SetActive(false);
+
+        restartButtonLabel.text = won ? "Play Again" : "Try Again";
         restartBtn.gameObject.SetActive(true);
+        mainMenuBtn.gameObject.SetActive(true);
     }
 
     // Called by Restart button
@@ -333,6 +348,21 @@ public void OnEndGameChoice()
     {
         GameObject go = Instantiate(floatingTextPrefab, spawnPoint.position, Quaternion.identity, spawnPoint.root);
         go.GetComponent<FloatingText>().Setup(message, color);
+    }
+
+    public void OnSurrender()
+    {
+        if (gameOver) return;
+        messageText.text = "🏳️ You surrendered.";
+        EndGame(false);
+    }
+
+    public void OnMainMenu()
+    {
+        // TODO: once a Main Menu scene exists, replace this with:
+        SceneManager.LoadScene("MainMenu");
+        // messageText.text = "Main Menu coming soon — restarting instead.";
+        StartGame();
     }
 
 }
